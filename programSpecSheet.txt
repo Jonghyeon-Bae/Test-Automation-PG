@@ -7,6 +7,7 @@ InputSpec
 - type: string          // string, number
 - constraints: Rule[]   // min, max, pattern
 - required: boolean
+- source?: "schema" | "ui" | "api"
 
 2. Rule
 Rule
@@ -31,3 +32,481 @@ RiskHint
 - target: string
 - riskType: "business" | "usability" | "data"
 - description: string
+
+
+/////////////////////////////////////////////////////////////////////////
+
+Step 2. TestPoint 출력 모델 정의 - Phase 1의 결과물
+
+TestPoint {
+  id: string                 // 고유 식별자
+  domain: string             // CustomerForm
+  target: string             // phoneNumber
+  constraints: Constraint[]  // 분석된 제약
+  risk: Risk                 // 주요 리스크
+  recommendedTechniques: TestTechnique[]
+  businessImpact?: string
+}
+
+1. Constraint
+Constraint {
+  kind: "required" | "min" | "max" | "pattern" | "enum"
+  value?: any
+}
+
+2. Risk
+Risk {
+  type: "input" | "validation" | "data"
+  description: string
+}
+
+3. ISTQB 기준 TestTechnique
+type TestTechnique =
+  | "equivalence partitioning" (동등분할)
+  | "boundary value analysis"(경계값 분석 ex: 2-value, 3-value)
+  | "error guessing" (오류 추정)
+
+4. InputSpec 을 통한 입력과 출력
+
+InputData
+{
+  domain: "CustomerForm",
+  target: "phoneNumber",
+  type: "string",
+  constraints: [
+    { kind: "pattern", value: "numeric 10~11" },
+    { kind: "required" }
+  ]
+}
+
+OutputData
+{
+  "id": "TP-CustomerForm-phoneNumber",
+  "domain": "CustomerForm",
+  "target": "phoneNumber",
+  "constraints": [
+    { "kind": "required" },
+    { "kind": "pattern", "value": "numeric 10~11" }
+  ],
+  "risk": {
+    "type": "validation",
+    "description": "Invalid phone number format"
+  },
+  "recommendedTechniques": [
+    "equivalence partitioning",
+    "boundary value analysis"
+  ],
+  "businessImpact": "고객 연락 불가"
+}
+
+
+Step 3. TestCondition(테스트 조건) 모델 정의
+Phase 2 ~ 3의 핵심산출물로 Testpoint를 TestCondition으로 분해
+
+1. TestCondition 기본 모델 정의
+TestCondition {
+  id: string                     // TCND-001
+  testPointId: string            // TP-CustomerForm-phoneNumber
+  category: ConditionCategory    // validation | boundary | state | risk
+  description: string            // 조건 설명
+  expectedResult: string         // 기대 결과
+  relatedTechnique: TestTechnique
+}
+
+2. ConditionCategory
+type ConditionCategory =
+  | "equivalence" // 동등분할 -> 유효/비유효
+  | "boundary"  // 경계값 분석 -> Min / Max
+  | "state"  // 상태
+  | "risk" // 리스크
+
+Example.1 (phoneNumber)
+
+InputData
+{
+  domain: "CustomerForm",
+  target: "phoneNumber",
+  type: "string",
+  constraints: [
+    { kind: "pattern", value: "numeric 10~11" },
+    { kind: "required" }
+  ]
+}
+
+TestPoint 
+{
+  "id": "TP-CustomerForm-phoneNumber",
+  "domain": "CustomerForm",
+  "target": "phoneNumber",
+  "constraints": [
+    { "kind": "required" },
+    { "kind": "pattern", "value": "numeric 10~11" }
+  ],
+  "risk": {
+    "type": "validation",
+    "description": "Invalid phone number format"
+  },
+  "recommendedTechniques": [
+    "equivalence partitioning",
+    "boundary value analysis"
+  ]
+}
+
+TestCondition
+[
+  {
+    "id": "TCND-001",
+    "testPointId": "TP-CustomerForm-phoneNumber",
+    "category": "equivalence",
+    "description": "숫자 10~11자리의 전화번호가 입력되면 유효하다",
+    "expectedResult": "입력이 허용되고 오류 메시지가 표시되지 않는다",
+    "relatedTechnique": "equivalence partitioning"
+  },
+  {
+    "id": "TCND-002",
+    "testPointId": "TP-CustomerForm-phoneNumber",
+    "category": "equivalence",
+    "description": "숫자가 아닌 문자가 포함된 전화번호는 무효하다",
+    "expectedResult": "형식 오류 메시지가 표시된다",
+    "relatedTechnique": "equivalence partitioning"
+  },
+  {
+    "id": "TCND-003",
+    "testPointId": "TP-CustomerForm-phoneNumber",
+    "category": "boundary",
+    "description": "전화번호가 9자리인 경우",
+    "expectedResult": "길이 부족 오류가 발생한다",
+    "relatedTechnique": "boundary value analysis"
+  },
+  {
+    "id": "TCND-004",
+    "testPointId": "TP-CustomerForm-phoneNumber",
+    "category": "boundary",
+    "description": "전화번호가 12자리인 경우",
+    "expectedResult": "길이 초과 오류가 발생한다",
+    "relatedTechnique": "boundary value analysis"
+  }
+]
+
+Example.2 (email)
+InputSpec {
+  domain: "CustomerForm" // 고객페이지에서
+  target: "email" // 이메일을
+  type: "string" // string 형태의 타입으로
+  constraints: [
+    { kind: "pattern", value: "email format" }, // 이메일 패턴이 맞는지
+    { kind: "required" } // 유효한 값인지
+  ]
+}
+
+Testpoint
+{
+  "id": "TP-CustomerForm-email",
+  "domain": "CustomerForm",
+  "target": "email",
+  "constraints": [
+    { "kind": "required" },
+    { "kind": "pattern", "value": "email format" }
+  ],
+  "risk": {
+    "type": "data", // 리스크 형태는 데이터이며
+    "description": "Invalid email prevents notification delivery" // 형태가 유효하지 않아 전송 불가 메세지 출력
+  },
+  "recommendedTechniques": [
+    "equivalence partitioning",
+    "error guessing"
+  ],
+  "businessImpact": "이메일 발송 실패"
+}
+
+TestCondition
+[
+  {
+    "id": "TCND-EMAIL-001",
+    "testPointId": "TP-CustomerForm-email",
+    "category": "equivalence",
+    "description": "올바른 이메일 형식이 입력되면 유효하다",
+    "expectedResult": "입력이 정상 처리된다",
+    "relatedTechnique": "equivalence partitioning"
+  },
+  {
+    "id": "TCND-EMAIL-002",
+    "testPointId": "TP-CustomerForm-email",
+    "category": "equivalence",
+    "description": "@ 기호가 없는 이메일은 무효하다",
+    "expectedResult": "이메일 형식 오류 메시지가 표시된다",
+    "relatedTechnique": "equivalence partitioning"
+  },
+  {
+    "id": "TCND-EMAIL-003",
+    "testPointId": "TP-CustomerForm-email",
+    "category": "risk",
+    "description": "공백이 포함된 이메일 입력",
+    "expectedResult": "입력이 거부된다",
+    "relatedTechnique": "error guessing"
+  }
+]
+
+Step 4. Create TestCase
+TestCase는 타겟에 대하여 어떻게 테스트 할것인가 를 정의함.
+
+1. TestCase 모델 정의
+TestCase {
+  id: string
+  testConditionId: string
+  title: string
+  preconditions?: string[]
+  steps: TestStep[]
+  expectedResult: string
+}
+
+TestStep {
+  stepNo: number
+  action: string
+  inputData?: string
+}
+
+2. TestCondition -> TestCase 변환 예시
+Example 1. PhoneNumber
+대상
+{
+    "id": "TCND-003", // TC변환을 위한 대상
+    "testPointId": "TP-CustomerForm-phoneNumber",
+    "category": "boundary",
+    "description": "전화번호가 9자리인 경우",
+    "expectedResult": "길이 부족 오류가 발생한다",
+    "relatedTechnique": "boundary value analysis"
+  },
+
+TestCase
+{
+  "id": "TC-001",
+  "testConditionId": "TCND-003",
+  "title": "전화번호 9자리 입력 시 오류 검증",
+  "preconditions": [
+    "CustomerForm 페이지에 진입한다"
+  ],
+  "steps": [
+    {
+      "stepNo": 1,
+      "action": "전화번호 입력란에 값을 입력한다",
+      "inputData": "123456789"
+    },
+    {
+      "stepNo": 2,
+      "action": "폼을 제출한다"
+    }
+  ],
+  "expectedResult": "전화번호 길이 부족 오류 메시지가 표시된다"
+}
+
+Example 2. email
+  {
+    "id": "TCND-EMAIL-003", // TC대상
+    "testPointId": "TP-CustomerForm-email",
+    "category": "risk",
+    "description": "공백이 포함된 이메일 입력",
+    "expectedResult": "입력이 거부된다",
+    "relatedTechnique": "error guessing"
+  }
+
+TestCase
+{
+  "id": "TC-002",
+  "testConditionId": "TCND-EMAIL-003",
+  "title": "공백이 포함된 이메일 입력 시 오류 검증",
+  "preconditions": [
+    "CustomerForm 페이지에 진입한다"
+  ],
+  "steps": [
+    {
+      "stepNo": 1,
+      "action": "이메일 입력란에 값을 입력한다",
+      "inputData": "test @example.com"
+    },
+    {
+      "stepNo": 2,
+      "action": "폼을 제출한다"
+    }
+  ],
+  "expectedResult": "이메일 형식 오류 메시지가 표시된다"
+}
+
+Step 5. Test Excution Spec 설계 (테스트 명세 설계)
+TestCase를 사람 또는 도구가 바로 실행 가능한 명세로 변환하는 것을 목표.
+실제 실행 상황에서는 언제 / 어떤 상태값에서 / 무엇을 먼저 / 실패 시 판단 등 구조적인 형태가 필요함.
+따라서 Testcase와 실행 맥락을 결합하여 테스트 명세를 생성하는 것이 목적.
+
+1. Execution Spec 기본 모델
+TestExecutionSpec {
+  id: string
+  domain: string
+  title: string
+
+  preconditions: Precondition[]
+  steps: TestStep[]
+  expectedResults: ExpectedResult[]
+
+  relatedTestCaseId: string
+  riskLevel?: "low" | "medium" | "high"
+}
+
+1.1 Precondition(사전조건)
+Precondition {
+  type: "state" | "data"
+  description: string
+}
+ => 상태가 접수(S1)이다. 고객 정보 입력 화면이 열려있다.
+
+1.2 TestStep (실행단계)
+TestStep {
+  order: number 
+  action: string  
+  input?: any
+}
+=> 전화번호 입력 필드에 값을 입력한다 . 저장 버튼을 클릭한다(이벤트 실행)
+
+1.3 ExpectedResult(기대 결과)
+ExpectedResult {
+  type: "ui" | "state" | "message"  
+  description: string
+}
+=> 에러 메세지가 표현되지 않음. 다음 상태로 전이
+
+2. TestCase 에서 Execution Spec 변환 
+TestCase
+{
+  "id": "TC-CustomerForm-phone-valid",
+  "input": "01012345678",
+  "expected": "정상 처리"
+}
+
+Execution Spec 
+{
+  "id": "TES-CustomerForm-phone-valid",
+  "domain": "CustomerForm",
+  "title": "유효한 전화번호 입력 시 정상 처리된다",
+
+  "preconditions": [
+    {
+      "type": "state",
+      "description": "시스템 상태가 '접수(S1)'이다"
+    }
+  ],
+
+  "steps": [
+    {
+      "order": 1,
+      "action": "전화번호 입력 필드에 값을 입력한다",
+      "input": "01012345678"
+    },
+    {
+      "order": 2,
+      "action": "저장 버튼을 클릭한다"
+    }
+  ],
+
+  "expectedResults": [
+    {
+      "type": "ui",
+      "description": "에러 메시지가 표시되지 않는다"
+    }
+  ],
+
+  "relatedTestCaseId": "TC-CustomerForm-phone-valid",
+  "riskLevel": "medium"
+}
+
+Step 6. TestSuite & Regression / Risk Structure (테스트스위트와 회귀/리스크 구조)
+개별 테스트 명세들을 목적/리스크 별로 묶은것을 테스트 스위트라고 하며 조직화 하는 단계.
+-> "이 테스트를 실행한다" 가 아닌 "언제, 무엇을 실행할것인가?"를 결정
+
+1. TestSuite 기본 모델
+TestSuite {
+  id: string
+  name: string
+  description: string
+
+  criteria: SuiteCriteria
+  testSpecIds: string[]
+}
+
+1.1 SuiteCriteria (선정 기준)
+SuiteCriteria {
+  domain?: string
+  state?: string
+  riskLevel?: "high" | "medium" | "low"
+  technique?: TestTechnique
+}
+
+2. 일반적인 Suite 유형
+
+2.1 Smoke Test Suite
+{
+  "id": "TS-SMOKE",
+  "name": "Smoke Test",
+  "description": "핵심 기능 정상 여부 확인",
+  "criteria": {
+    "riskLevel": "high"
+  }
+}
+=> 가장 중요한 기능만 진행하며 배포 직후 또는 초기에 확인용으로 사용
+
+2.2 Regression Test Suite(회귀 테스트로 기존 기능의 영향 여부 확인용)
+{
+  "id": "TS-REGRESSION",
+  "name": "Regression Test",
+  "description": "기존 기능 영향 여부 확인",
+  "criteria": {
+    "domain": "CustomerForm"
+  }
+}
+=> Phase 3과 5에서 중요했던 흐름을 중심으로 변경에 대하여 전/후 비교 목적
+
+2.3 Risk-based Test Suite
+{
+  "id": "TS-RISK-HIGH",
+  "name": "High Risk Test Suite",
+  "description": "비즈니스 임팩트가 큰 영역",
+  "criteria": {
+    "riskLevel": "high"
+  }
+}
+=> 실패 시 치명적인 부분
+
+3. Execution Spec -> Suite 자동 매핑 로직 (명세->스위트)
+
+Example 1.
+if (spec.riskLevel === "high") { // 명세의 riskLevel 이 "high"인 경우
+  addToSuite("TS-RISK-HIGH") // addToSuite에 "TS-RISK-HIGH" 를 추가
+}
+
+if (spec.domain === "CustomerForm") { // 명세의 domain(폼,컴포넌트 등)이 "CustomerForm"인 경우 
+  addToSuite("TS-REGRESSION") // addToSuite에 "TS-REGRESSION"을 추가
+}
+
+Step 7. Output Generation (결과물 생성)
+자동으로 설계된 테스트 자산을 실무에서 바로 공유, 설명, 검토 가능한 형태로 출력. 즉, 사람이 읽고 이해가 가능한지가 중요함.
+
+1. Output Generator 기본 구조
+OutputGenerator {
+  generateSummary()
+  generateTestCases()
+  generateExploratoryCharters()
+  generateSuites()
+}
+
+2. 출력 포멧
+
+2.1 Markdown
+### CustomerForm – phoneNumber
+
+| ID | 조건 | 입력 예 | 기대 결과 | 기법 |
+|----|-----|--------|----------|-----|
+| TC-01 | 필수값 | "" | 오류 표시 | EP |
+| TC-02 | 형식 오류 | "abc" | 오류 표시 | EP |
+| TC-03 | 경계값 | "1234567890" | 통과 | BVA |
+
+2.2 CSV / Excel (각 항목에 맞게 데이터 매칭)
+ID,Domain,Target,Condition,Expected,Technique,Risk
+TC-01,CustomerForm,phoneNumber,Empty Input,Error,EP,High
