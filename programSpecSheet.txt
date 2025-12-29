@@ -1,0 +1,33 @@
+Step 1. 입력 모델 개념 설계
+
+1. InputSpec
+InputSpec
+- domain: string        // CustomerForm, LoginForm
+- target: string        // phoneNumber, email
+- type: string          // string, number
+- constraints: Rule[]   // min, max, pattern
+- required: boolean
+
+2. Rule
+Rule
+- kind: "min" | "max" | "pattern" | "enum"
+- value: any
+- description?: string
+
+3. StateModel & Transition
+StateModel
+- name: string
+- states: State[]
+- transitions: Transition[]
+
+Transition
+- from: string
+- event: string
+- to: string
+- guard?: string   // 조건
+
+4. RiskHint
+RiskHint
+- target: string
+- riskType: "business" | "usability" | "data"
+- description: string
