@@ -36,7 +36,7 @@ export function generateExecutionSpecs(
 
             steps: tc.steps.map((s) => ({
                 order: s.order,
-                action: s.action,
+                // action: s.action,
                 input: s.inputData,
             })),
 

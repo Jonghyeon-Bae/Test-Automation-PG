@@ -24,7 +24,7 @@ export interface ExecutionStep {
     order: number
 
     /** 사람용 설명 */
-    description: string
+    // description: string
 
     /** 자동화 힌트 */
     action?: "navigate" | "fill" | "click" | "submit" | "wait"

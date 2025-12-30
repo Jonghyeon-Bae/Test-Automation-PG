@@ -20,26 +20,26 @@ function extractPath(action: string): string {
 }
 
 export function mapExecutionStepToPlaywright(step: ExecutionStep): string {
-    const action = step.action.toLowerCase()
+    const action = step.action ? step.action.toLowerCase() : ""
 
     // 입력
     if (action.includes("입력")) {
         return `
-await page.fill('[name=${extractTarget(step.action)}]', '${step.input}')
+await page.fill('[name=${extractTarget(step.action || "")}]', '${step.input}')
 `
     }
 
     // 클릭
     if (action.includes("클릭")) {
         return `
-await page.click('${extractClickTarget(step.action)}')
+await page.click('${extractClickTarget(step.action || "")}')
 `
     }
 
     // 페이지 이동
     if (action.includes("이동")) {
         return `
-await page.goto('${extractPath(step.action)}')
+await page.goto('${extractPath(step.action || "")}')
 `
     }
 
