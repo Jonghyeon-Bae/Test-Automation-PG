@@ -56,7 +56,11 @@ function runTestDesignPipeline() {
     console.log("✅ TestScenario", scenarios)
 
     // 7️⃣ TestExecutionSpec 생성
-    const executionSpecs = generateExecutionSpecs(testPoints, testCases)
+    const executionSpecs = generateExecutionSpecs(
+        testPoints,
+        testCases,
+        testConditions
+    )
 
     console.log("✅ TestExecutionSpec", executionSpecs)
 

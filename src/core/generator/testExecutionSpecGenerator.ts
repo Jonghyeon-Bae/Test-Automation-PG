@@ -3,49 +3,53 @@ import { TestPoint } from "../models/TestPoint"
 import { TestCase } from "../models/TestCase"
 import { TestExecutionSpec } from "../models/TestExecutionSpec"
 import { mapRiskLevel } from "../mapper/riskLevelMapper"
+import { TestCondition } from "../models/TestCondition"
 
 export function generateExecutionSpecs(
     testPoints: TestPoint[],
-    testCases: TestCase[]
+    testCases: TestCase[],
+    testConditions: TestCondition[]
 ): TestExecutionSpec[] {
     const specs: TestExecutionSpec[] = []
 
-    for (const tp of testPoints) {
-        const relatedCases = testCases.filter((tc) =>
-            tc.testConditionId.startsWith(tp.id)
+    for (const tc of testCases) {
+        const condition = testConditions.find(
+            (c) => c.id === tc.testConditionId
         )
+        if (!condition) continue
 
-        for (const tc of relatedCases) {
-            specs.push({
-                id: `TES-${tc.id}`,
-                domain: tp.domain,
-                target: tp.target,
-                title: tc.title,
+        const tp = testPoints.find((p) => p.id === condition.testPointId)
+        if (!tp) continue
 
-                preconditions: [
-                    {
-                        type: "state",
-                        description: `${tp.domain} 화면이 열려 있다`,
-                    },
-                ],
+        specs.push({
+            id: `TES-${tc.id}`,
+            domain: tp.domain,
+            target: tp.target,
+            title: tc.title,
 
-                steps: tc.steps.map((s) => ({
-                    order: s.order,
-                    action: s.action,
-                    input: s.inputData,
-                })),
+            preconditions: [
+                {
+                    type: "state",
+                    description: `${tp.domain} 화면이 열려 있다`,
+                },
+            ],
 
-                expectedResults: [
-                    {
-                        type: "ui",
-                        description: tc.expectedResult,
-                    },
-                ],
+            steps: tc.steps.map((s) => ({
+                order: s.order,
+                action: s.action,
+                input: s.inputData,
+            })),
 
-                relatedTestCaseId: tc.id,
-                riskLevel: mapRiskLevel(tp),
-            })
-        }
+            expectedResults: [
+                {
+                    type: "ui",
+                    description: tc.expectedResult,
+                },
+            ],
+
+            relatedTestCaseId: tc.id,
+            riskLevel: mapRiskLevel(tp),
+        })
     }
 
     return specs
