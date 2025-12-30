@@ -12,6 +12,6 @@ export interface TestSuite {
 
 export interface SuiteCriteria {
     domain?: string
-    riskLevel?: "high" | "medium" | "low"
+    riskLevel?: "Low" | "Medium" | "High"
     technique?: TestTechnique
 }

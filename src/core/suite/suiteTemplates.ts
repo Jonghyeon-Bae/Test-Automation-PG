@@ -6,7 +6,7 @@ export const SUITE_TEMPLATES: Omit<TestSuite, "testSpecIds">[] = [
         id: "TS-SMOKE",
         name: "Smoke Test Suite",
         description: "핵심 기능 정상 동작 여부 확인",
-        criteria: { riskLevel: "high" },
+        criteria: { riskLevel: "High" },
     },
     {
         id: "TS-REGRESSION",
