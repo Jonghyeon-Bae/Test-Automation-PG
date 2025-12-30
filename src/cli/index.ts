@@ -1,32 +1,73 @@
-// src/cli/index.ts
+#!/usr/bin/env node
+
+/// <reference types="node" />
+
 import fs from "fs"
+import path from "path"
+
 import { analyzeZodSchema } from "../core/analyzer/formAnalyzer"
 import { generateTestPoints } from "../core/generator/testPointGenerator"
-import { generateExecutionSpecs } from "../core/generator/testExecutionSpecGenerator"
-import { generateTestSuites } from "../core/generator/testSuiteGenerator"
-const source = fs.readFileSync("./src/examples/customer-schema.ts", "utf-8")
+import { generateTestConditions } from "../core/generator/testConditionGenerator"
+import { generateTestCases } from "../core/generator/testCaseGenerator"
+import { generateScenarios } from "../core/generator/testScenarioGenerator"
 
-const specs = analyzeZodSchema(source, "CustomerForm")
-const testPoints = generateTestPoints(specs)
+// --------------------
+// 1. CLI 인자 파싱
+// --------------------
+const args = process.argv.slice(2)
 
-/**
- * 예시 TestCase (실제로는 Step 4 Generator 결과)
- */
-const testCases = [
-    {
-        id: "TC-001",
-        testConditionId: "TP-CustomerForm-phoneNumber-BOUNDARY",
-        title: "전화번호 9자리 입력 시 오류 검증",
-        steps: [
-            { stepNo: 1, action: "전화번호 입력", inputData: "123456789" },
-            { stepNo: 2, action: "저장 버튼 클릭" },
-        ],
-        expectedResult: "전화번호 길이 부족 오류 메시지가 표시된다",
-        relatedTechnique: "boundary value analysis",
-    },
-]
+function getArg(flag: string): string | undefined {
+    const index = args.indexOf(flag)
+    return index !== -1 ? args[index + 1] : undefined
+}
 
-const executionSpecs = generateExecutionSpecs(testPoints, testCases)
-const suites = generateTestSuites(executionSpecs)
-console.log(JSON.stringify(executionSpecs, null, 2))
-console.log(JSON.stringify(suites, null, 2))
+const inputPath = getArg("--input")
+const domain = getArg("--domain")
+const outDir = getArg("--out") || "./testcraft-output"
+
+if (!inputPath || !domain) {
+    console.error("Usage:")
+    console.error(
+        "  testcraft analyze --input <file> --domain <domain> [--out <dir>]"
+    )
+    process.exit(1)
+}
+
+// --------------------
+// 2. 입력 파일 읽기
+// --------------------
+const sourceCode = fs.readFileSync(inputPath, "utf-8")
+
+// --------------------
+// 3. TestCraft 파이프라인 실행
+// --------------------
+const inputSpecs = analyzeZodSchema(sourceCode, domain)
+const testPoints = generateTestPoints(inputSpecs)
+const testConditions = generateTestConditions(testPoints)
+const testCases = generateTestCases(testConditions, testPoints)
+
+// (TestData, Scenario는 Step 2에서 확장)
+
+// --------------------
+// 4. 출력 디렉토리 생성
+// --------------------
+fs.mkdirSync(outDir, { recursive: true })
+
+function writeJSON(filename: string, data: any) {
+    fs.writeFileSync(
+        path.join(outDir, filename),
+        JSON.stringify(data, null, 2),
+        "utf-8"
+    )
+}
+
+// --------------------
+// 5. 결과 출력
+// --------------------
+writeJSON("input-specs.json", inputSpecs)
+writeJSON("test-points.json", testPoints)
+writeJSON("test-conditions.json", testConditions)
+writeJSON("test-cases.json", testCases)
+
+console.log("✅ TestCraft analysis complete.")
+console.log(`📂 Output directory: ${outDir}`)

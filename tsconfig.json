@@ -11,11 +11,11 @@
     // "module": "nodenext",
     // "target": "esnext",
     "target": "es2020",
-    "types": [],
     "esModuleInterop": true,
     // For nodejs:
     // "lib": ["esnext"],
-    // "types": ["node"],
+    "types": ["node"],
+    // "moduleResolution": "Node",
     // and npm install -D @types/node
 
     // Other Outputs
