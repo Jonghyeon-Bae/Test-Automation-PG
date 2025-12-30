@@ -8,9 +8,19 @@ export function mapTechniques(spec: InputSpec): TestTechnique[] {
         techniques.push("equivalence partitioning")
     }
 
+    if (
+        spec.constraints.some(
+            (c) =>
+                c.kind === "required" ||
+                c.kind === "pattern" ||
+                c.kind === "enum"
+        )
+    ) {
+        techniques.push("equivalence partitioning")
+    }
+
     if (spec.constraints.some((c) => c.kind === "min" || c.kind === "max")) {
         techniques.push("boundary value analysis")
     }
-
     return techniques
 }

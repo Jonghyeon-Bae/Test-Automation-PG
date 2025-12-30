@@ -1,5 +1,5 @@
 export interface Rule {
-    kind: "min" | "max" | "pattern" | "enum"
+    kind: "required" | "min" | "max" | "pattern" | "enum"
     value?: any
 }
 

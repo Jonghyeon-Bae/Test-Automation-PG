@@ -11,7 +11,10 @@ export function analyzeZodSchema(
             target: "phoneNumber",
             type: "string",
             required: true,
-            constraints: [{ kind: "pattern", value: "numeric 10~11" }],
+            constraints: [
+                { kind: "required" }, // Rule 확장 필요
+                { kind: "pattern", value: "numeric 10~11" },
+            ],
         },
     ]
 }
