@@ -10,7 +10,7 @@ export interface TestExecutionSpec {
     expectedResults: ExpectedResult[]
 
     relatedTestCaseId: string
-    riskLevel?: "low" | "medium" | "high"
+    riskLevel?: "Low" | "Medium" | "High"
 }
 
 export interface Precondition {

@@ -8,9 +8,9 @@ export interface TestCase {
     preconditions?: string[]
     steps: TestStep[]
     /** 테스트 케이스 전체 기대 결과 */
-    // expectedResult: string
+    expectedResult: string
     priority: string
-    relatedTechnique: string
+    // relatedTechnique: string
 }
 
 export interface TestStep {

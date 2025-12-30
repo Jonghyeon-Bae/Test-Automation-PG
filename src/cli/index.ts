@@ -1,71 +1,73 @@
-// src/index.ts
+#!/usr/bin/env node
+
+/// <reference types="node" />
+
+import fs from "fs"
+import path from "path"
 
 import { analyzeZodSchema } from "../core/analyzer/formAnalyzer"
-
 import { generateTestPoints } from "../core/generator/testPointGenerator"
 import { generateTestConditions } from "../core/generator/testConditionGenerator"
 import { generateTestCases } from "../core/generator/testCaseGenerator"
-import { generateTestData } from "../core/generator/testDataGenerator"
 import { generateScenarios } from "../core/generator/testScenarioGenerator"
-import { generateExecutionSpecs } from "../core/generator/testExecutionSpecGenerator"
-import { generateTestSuites } from "../core/generator/testSuiteGenerator"
 
-import type { InputSpec } from "../core/models/InputSpec"
-import type { TestData } from "../core/models/TestData"
+// --------------------
+// 1. CLI 인자 파싱
+// --------------------
+const args = process.argv.slice(2)
 
-function runTestDesignPipeline() {
-    console.log("🚀 Test Design Automation Pipeline START")
-
-    // 1️⃣ 입력 분석 (현재는 Zod 코드 → InputSpec)
-    const sourceCode = `z.object({ phoneNumber: z.string().regex(...) })`
-
-    const inputSpecs: InputSpec[] = analyzeZodSchema(sourceCode, "회원가입")
-
-    console.log("✅ InputSpec", inputSpecs)
-
-    // 2️⃣ TestPoint 생성
-    const testPoints = generateTestPoints(inputSpecs)
-    console.log("✅ TestPoint", testPoints)
-
-    // 3️⃣ TestCondition 생성
-    const testConditions = generateTestConditions(testPoints)
-    console.log("✅ TestCondition", testConditions)
-
-    // 4️⃣ TestCase 생성
-    const testCases = generateTestCases(testConditions, testPoints)
-    console.log("✅ TestCase", testCases)
-
-    // 5️⃣ TestData 생성 + Map 구성
-    const testDataMap: Record<string, TestData[]> = {}
-
-    for (const spec of inputSpecs) {
-        const key = `${spec.domain}.${spec.target}`
-        testDataMap[key] = generateTestData(spec)
-    }
-
-    console.log("✅ TestDataMap", testDataMap)
-
-    // 6️⃣ TestScenario 생성
-    const scenarios = generateScenarios(
-        testCases,
-        testPoints,
-        testConditions,
-        testDataMap
-    )
-
-    console.log("✅ TestScenario", scenarios)
-
-    // 7️⃣ TestExecutionSpec 생성
-    const executionSpecs = generateExecutionSpecs(testPoints, testCases)
-
-    console.log("✅ TestExecutionSpec", executionSpecs)
-
-    // 8️⃣ TestSuite 생성
-    const testSuites = generateTestSuites(executionSpecs)
-    console.log("✅ TestSuite", testSuites)
-
-    console.log("🎉 Test Design Automation Pipeline END")
+function getArg(flag: string): string | undefined {
+    const index = args.indexOf(flag)
+    return index !== -1 ? args[index + 1] : undefined
 }
 
-// 실행
-runTestDesignPipeline()
+const inputPath = getArg("--input")
+const domain = getArg("--domain")
+const outDir = getArg("--out") || "./testcraft-output"
+
+if (!inputPath || !domain) {
+    console.error("Usage:")
+    console.error(
+        "  testcraft analyze --input <file> --domain <domain> [--out <dir>]"
+    )
+    process.exit(1)
+}
+
+// --------------------
+// 2. 입력 파일 읽기
+// --------------------
+const sourceCode = fs.readFileSync(inputPath, "utf-8")
+
+// --------------------
+// 3. TestCraft 파이프라인 실행
+// --------------------
+const inputSpecs = analyzeZodSchema(sourceCode, domain)
+const testPoints = generateTestPoints(inputSpecs)
+const testConditions = generateTestConditions(testPoints)
+const testCases = generateTestCases(testConditions, testPoints)
+
+// (TestData, Scenario는 Step 2에서 확장)
+
+// --------------------
+// 4. 출력 디렉토리 생성
+// --------------------
+fs.mkdirSync(outDir, { recursive: true })
+
+function writeJSON(filename: string, data: any) {
+    fs.writeFileSync(
+        path.join(outDir, filename),
+        JSON.stringify(data, null, 2),
+        "utf-8"
+    )
+}
+
+// --------------------
+// 5. 결과 출력
+// --------------------
+writeJSON("input-specs.json", inputSpecs)
+writeJSON("test-points.json", testPoints)
+writeJSON("test-conditions.json", testConditions)
+writeJSON("test-cases.json", testCases)
+
+console.log("✅ TestCraft analysis complete.")
+console.log(`📂 Output directory: ${outDir}`)
