@@ -4,7 +4,7 @@ export interface Rule {
 }
 
 export interface InputSpec {
-    domain: string | undefined
+    domain: string
     target: string
     type: "string" | "number"
     constraints: Rule[]

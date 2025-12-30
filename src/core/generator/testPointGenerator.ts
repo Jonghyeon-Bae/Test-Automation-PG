@@ -11,6 +11,6 @@ export function generateTestPoints(specs: InputSpec[]): TestPoint[] {
         constraints: spec.constraints,
         risk: mapRisk(spec),
         recommendedTechniques: mapTechniques(spec),
-        businessImpact: "고객 연락 불가",
+        // businessImpact: "고객 연락 불가",
     }))
 }
