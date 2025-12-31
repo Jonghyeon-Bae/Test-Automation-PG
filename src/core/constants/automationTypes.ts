@@ -6,6 +6,7 @@ export enum ActionType {
     CLICK = "click",
     SUBMIT = "submit",
     WAIT = "wait",
+    UNDEFINED = "undefined",
 }
 
 export enum AssertionType {

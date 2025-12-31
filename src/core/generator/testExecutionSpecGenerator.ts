@@ -18,7 +18,7 @@ function inferAction(step: {
     if (text.includes("페이지 이동"))
         return "navigate" as ExecutionStep["action"]
     if (text.includes("대기")) return "wait" as ExecutionStep["action"]
-    return undefined
+    return "undefined" as ExecutionStep["action"]
 }
 
 export function generateExecutionSpecs(
