@@ -2,46 +2,24 @@
 
 import { ExecutionStep } from "../../core/models/TestExecutionSpec"
 
-function extractTarget(action: string): string {
-    // 예: "phoneNumber 입력"
-    return action.split(" ")[0] || ""
-}
+export function mapPlaywrightAction(step: ExecutionStep): string {
+    switch (step.action) {
+        case "navigate":
+            return `await page.goto("${step.target}")`
 
-function extractClickTarget(action: string): string {
-    // 예: "제출 버튼 클릭"
-    if (action.includes("제출")) return "button[type=submit]"
-    return "button"
-}
+        case "fill":
+            return `await page.fill("${step.target}", "${step.value}")`
 
-function extractPath(action: string): string {
-    // 예: "회원가입 페이지로 이동"
-    if (action.includes("회원가입")) return "/signup"
-    return "/"
-}
+        case "click":
+            return `await page.click("${step.target}")`
 
-export function mapExecutionStepToPlaywright(step: ExecutionStep): string {
-    const action = step.action ? step.action.toLowerCase() : ""
+        case "submit":
+            return `await page.click("${step.target}")`
 
-    // 입력
-    if (action.includes("입력")) {
-        return `
-await page.fill('[name=${extractTarget(step.action || "")}]', '${step.input}')
-`
+        case "wait":
+            return `await page.waitForTimeout(${step.value ?? 1000})`
+
+        default:
+            return `// TODO: action not defined`
     }
-
-    // 클릭
-    if (action.includes("클릭")) {
-        return `
-await page.click('${extractClickTarget(step.action || "")}')
-`
-    }
-
-    // 페이지 이동
-    if (action.includes("이동")) {
-        return `
-await page.goto('${extractPath(step.action || "")}')
-`
-    }
-
-    return `// ⚠️ 매핑되지 않은 action: ${step.action}`
 }

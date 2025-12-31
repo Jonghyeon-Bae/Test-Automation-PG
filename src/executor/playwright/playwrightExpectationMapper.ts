@@ -2,26 +2,25 @@
 
 import { ExpectedResult } from "../../core/models/TestExecutionSpec"
 
-export function mapExpectedResultToPlaywright(result: ExpectedResult): string {
-    switch (result.type) {
-        case "message":
-            return `
-await expect(page.locator('.message')).toContainText('${result.description}')
-`
-        case "ui":
-            return `
-await expect(page.locator('${inferUiSelector(
-                result.description
-            )}')).toBeVisible()
-`
-        case "state":
-            return `
-/* state verification: ${result.description} */
-`
+export function mapPlaywrightExpectation(er: ExpectedResult): string {
+    switch (er.assertion) {
+        case "visible":
+            return `await expect(page.locator("${er.target}")).toBeVisible()`
+
+        case "equals":
+            return `await expect(page.locator("${
+                er.target
+            }")).toHaveValue(${JSON.stringify(er.expectedValue)})`
+
+        case "contains":
+            return `await expect(page.locator("${
+                er.target
+            }")).toContainText(${JSON.stringify(er.expectedValue)})`
+
+        case "notExists":
+            return `await expect(page.locator("${er.target}")).toHaveCount(0)`
+
+        default:
+            return `// TODO: assertion not defined`
     }
-}
-function inferUiSelector(desc: string): string {
-    if (desc.includes("오류")) return ".error"
-    if (desc.includes("정상")) return ".success"
-    return "body"
 }

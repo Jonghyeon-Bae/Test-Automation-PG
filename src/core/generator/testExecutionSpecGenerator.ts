@@ -1,9 +1,10 @@
 // src/core/generator/testExecutionSpecGenerator.ts
 import { TestPoint } from "../models/TestPoint"
 import { TestCase } from "../models/TestCase"
-import { TestExecutionSpec } from "../models/TestExecutionSpec"
+import { ExecutionStep, TestExecutionSpec } from "../models/TestExecutionSpec"
 import { mapRiskLevel } from "../mapper/riskLevelMapper"
 import { TestCondition } from "../models/TestCondition"
+import { mapActionType } from "../mapper/actionTypeMapper"
 
 export function generateExecutionSpecs(
     testPoints: TestPoint[],
@@ -34,11 +35,19 @@ export function generateExecutionSpecs(
                 },
             ],
 
-            steps: tc.steps.map((s) => ({
-                order: s.order,
-                // action: s.action,
-                input: s.inputData,
-            })),
+            steps: tc.steps
+                .map((s) => {
+                    const action = mapActionType(s.action)
+                    return action
+                        ? {
+                              order: s.order,
+                              action,
+                              value: s.inputData,
+                              input: s.inputData, // 기존 호환 유지
+                          }
+                        : null
+                })
+                .filter((step) => step !== null) as ExecutionStep[],
 
             expectedResults: [
                 {
