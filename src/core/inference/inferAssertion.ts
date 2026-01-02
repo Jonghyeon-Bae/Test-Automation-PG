@@ -21,6 +21,7 @@ export function inferAssertion(
     if (
         text.includes("보인다") ||
         text.includes("표시된다") ||
+        text.includes("나타난다") ||
         text.includes("노출")
     ) {
         return AssertionType.VISIBLE
@@ -28,6 +29,7 @@ export function inferAssertion(
 
     if (
         text.includes("같다") ||
+        text.includes("동일") ||
         text.includes("일치")
     ) {
         return AssertionType.EQUALS

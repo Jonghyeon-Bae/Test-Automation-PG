@@ -39,22 +39,31 @@ export function generateExecutionSpecs(
             ],
 
             steps: tc.steps.map((s) => {
-                const action = inferAction({ description: s.action })
+                const inferredAction = inferAction({ description: s.action })
+
                 return {
                     order: s.order,
-                    action: action,
-                    input: s.inputData,
-                    // value: s.inputData,
+
+                    // 자동화 힌트 (추론 결과)
+                    action: inferredAction,
+
+                    // 설계 입력은 input으로만 유지
+                    input: s.inputData?s.inputData:"None Input Types",
                 }
             }),
 
             expectedResults: [
                 {
-                    description: tc.expectedResult,
+                    description: tc.expectedResult, // 사람용 설계 결과
                     type: "ui",
-                    assertion: inferAssertion({ description: tc.expectedResult }),
+
+                    // 추론된 검증 힌트
+                    assertion: inferAssertion({
+                        description: tc.expectedResult,
+                    }),
                 },
             ],
+
 
             relatedTestCaseId: tc.id,
             riskLevel: mapRiskLevel(tp),

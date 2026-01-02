@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node src/cli/index.ts",
-    "testdev": "ts-node src/cli/index.dev.ts"
+    "testdev": "ts-node src/sampleData/testExecutionmSpec.console.test.ts"
   },
   "keywords": [],
   "author": "",

@@ -2,6 +2,8 @@
 
 export interface TestCase {
     id: string
+    // domain:string
+    // target:string
     /** 어떤 TestCondition에서 파생되었는지 */
     testConditionId: string
     title: string
@@ -17,6 +19,6 @@ export interface TestStep {
     order: number
     action: string
     inputData?: string
-    expectedResult: string
+    expectedResult?: string
     note?:string
 }
