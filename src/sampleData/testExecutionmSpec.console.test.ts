@@ -2,6 +2,7 @@ import { generateExecutionSpecs } from "../core/generator/testExecutionSpecGener
 import { sampleTestPoints } from "./sampleTestPoint"
 import { sampleTestCases } from "./sampleTestCase"
 import { sampleTestConditions } from "./sampleTestCondition"
+import { checkAutomationReadiness } from "../core/checker/automationReadinessChecker"
 
 console.log("🚀 ExecutionSpec Generator Test START")
 
@@ -14,3 +15,8 @@ const specs = generateExecutionSpecs(
 console.dir(specs, { depth: null })
 
 console.log("🎉 ExecutionSpec Generator Test END")
+
+
+
+const readiness = checkAutomationReadiness(specs)
+console.log(readiness)
