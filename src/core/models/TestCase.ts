@@ -18,4 +18,5 @@ export interface TestStep {
     action: string
     inputData?: string
     expectedResult: string
+    note?:string
 }

@@ -40,6 +40,14 @@ export function validateExecutionSpec(
                 stepOrder: step.order,
             })
         }
+        if(step.action === "unknown")
+            results.push({
+                specId: spec.id,
+                level: "error",
+                code: "unknown",
+                message: "분류되지 않은 형태입니다.",
+                stepOrder: step.order,
+        })
     })
 
     // 4️⃣ ExpectedResult 검증

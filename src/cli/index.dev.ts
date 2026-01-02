@@ -16,7 +16,7 @@ import type { TestData } from "../core/models/TestData"
 function runTestDesignPipeline() {
     console.log("🚀 Test Design Automation Pipeline START")
 
-    // 1️⃣ 입력 분석 (현재는 Zod 코드 → InputSpec)
+    // 1️⃣ 입력 분석 (현재는 Zod 코드 → InputSpec) 1
     const sourceCode = `z.object({ phoneNumber: z.string().regex(...) })`
 
     const inputSpecs: InputSpec[] = analyzeZodSchema(sourceCode, "회원가입")

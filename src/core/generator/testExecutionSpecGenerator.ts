@@ -1,25 +1,11 @@
 // src/core/generator/testExecutionSpecGenerator.ts
 import { TestPoint } from "../models/TestPoint"
 import { TestCase } from "../models/TestCase"
-import { TestExecutionSpec, ExecutionStep } from "../models/TestExecutionSpec"
-import { mapRiskLevel } from "../mapper/riskLevelMapper"
+import { TestExecutionSpec } from "../models/TestExecutionSpec"
 import { TestCondition } from "../models/TestCondition"
-
-function inferAction(step: {
-    action?: string
-    description?: string
-}): ExecutionStep["action"] {
-    const text = (step.description || "").toLowerCase()
-    if (text.includes("입력") || text.includes("작성"))
-        return "fill" as ExecutionStep["action"]
-    if (text.includes("클릭") || text.includes("선택"))
-        return "click" as ExecutionStep["action"]
-    if (text.includes("제출")) return "submit" as ExecutionStep["action"]
-    if (text.includes("페이지 이동"))
-        return "navigate" as ExecutionStep["action"]
-    if (text.includes("대기")) return "wait" as ExecutionStep["action"]
-    return "undefined" as ExecutionStep["action"]
-}
+import { mapRiskLevel } from "../mapper/riskLevelMapper"
+import { inferAction } from "../inference/inferAction"
+import { inferAssertion } from "../inference/inferAssertion"
 
 export function generateExecutionSpecs(
     testPoints: TestPoint[],
@@ -34,7 +20,9 @@ export function generateExecutionSpecs(
         )
         if (!condition) continue
 
-        const tp = testPoints.find((p) => p.id === condition.testPointId)
+        const tp = testPoints.find(
+            (p) => p.id === condition.testPointId
+        )
         if (!tp) continue
 
         specs.push({
@@ -44,16 +32,29 @@ export function generateExecutionSpecs(
             title: tc.title,
 
             preconditions: [
-                { type: "state", description: `${tp.domain} 화면이 열려 있다` },
+                {
+                    type: "state",
+                    description: `${tp.domain} 화면이 열려 있다`,
+                },
             ],
 
-            steps: tc.steps.map((s, idx) => ({
-                order: idx + 1,
-                action: inferAction(s),
-                input: s.inputData, // 기존 호환
-            })),
+            steps: tc.steps.map((s) => {
+                const action = inferAction({ description: s.action })
+                return {
+                    order: s.order,
+                    action: action,
+                    input: s.inputData,
+                    // value: s.inputData,
+                }
+            }),
 
-            expectedResults: [{ type: "ui", description: tc.expectedResult }],
+            expectedResults: [
+                {
+                    description: tc.expectedResult,
+                    type: "ui",
+                    assertion: inferAssertion({ description: tc.expectedResult }),
+                },
+            ],
 
             relatedTestCaseId: tc.id,
             riskLevel: mapRiskLevel(tp),

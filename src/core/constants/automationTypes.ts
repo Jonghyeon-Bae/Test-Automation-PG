@@ -6,7 +6,7 @@ export enum ActionType {
     CLICK = "click",
     SUBMIT = "submit",
     WAIT = "wait",
-    UNDEFINED = "undefined",
+    UNKNOWN = "unknown",
 }
 
 export enum AssertionType {
@@ -14,4 +14,6 @@ export enum AssertionType {
     EQUALS = "equals",
     CONTAINS = "contains",
     NOT_EXISTS = "notExists",
+    UNKNOWN = "unknown",
+
 }

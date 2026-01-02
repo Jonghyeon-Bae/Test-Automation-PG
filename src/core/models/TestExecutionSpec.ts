@@ -28,9 +28,14 @@ export interface ExecutionStep {
     action: ActionType
     target?: string
     value?: string | number
+    note?:string
 
     /** 기존 TestCase 호환 */
     input?: any
+    assertion?:{
+        type: AssertionType,
+        expected?:string
+    }
 }
 
 export interface ExpectedResult {
